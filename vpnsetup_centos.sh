@@ -24,9 +24,9 @@
 # - All values MUST be placed inside 'single quotes'
 # - DO NOT use these special characters within values: \ " '
 
-YOUR_IPSEC_PSK=''
-YOUR_USERNAME=''
-YOUR_PASSWORD=''
+#YOUR_IPSEC_PSK=''
+#YOUR_USERNAME=''
+#YOUR_PASSWORD=''
 
 # Important notes:   https://git.io/vpnnotes
 # Setup VPN clients: https://git.io/vpnclients
@@ -46,7 +46,7 @@ check_ip() {
   printf '%s' "$1" | tr -d '\n' | grep -Eq "$IP_REGEX"
 }
 
-vpnsetup() {
+setup() {
 
 if ! grep -qs -e "release 6" -e "release 7" -e "release 8" /etc/redhat-release; then
   exiterr "This script only supports CentOS/RHEL 6, 7 and 8."
@@ -76,32 +76,32 @@ else
     exiterr "Could not detect the default network interface."
   fi
   NET_IFACE=eth0
-fi
+#fi
 
-[ -n "$YOUR_IPSEC_PSK" ] && VPN_IPSEC_PSK="$YOUR_IPSEC_PSK"
-[ -n "$YOUR_USERNAME" ] && VPN_USER="$YOUR_USERNAME"
-[ -n "$YOUR_PASSWORD" ] && VPN_PASSWORD="$YOUR_PASSWORD"
+#[ -n "$YOUR_IPSEC_PSK" ] && VPN_IPSEC_PSK="$YOUR_IPSEC_PSK"
+#[ -n "$YOUR_USERNAME" ] && VPN_USER="$YOUR_USERNAME"
+#[ -n "$YOUR_PASSWORD" ] && VPN_PASSWORD="$YOUR_PASSWORD"
 
-if [ -z "$VPN_IPSEC_PSK" ] && [ -z "$VPN_USER" ] && [ -z "$VPN_PASSWORD" ]; then
-  bigecho "VPN credentials not set by user. Generating random PSK and password..."
-  VPN_IPSEC_PSK=$(LC_CTYPE=C tr -dc 'A-HJ-NPR-Za-km-z2-9' < /dev/urandom | head -c 20)
-  VPN_USER=vpnuser
-  VPN_PASSWORD=$(LC_CTYPE=C tr -dc 'A-HJ-NPR-Za-km-z2-9' < /dev/urandom | head -c 16)
-fi
+#if [ -z "$VPN_IPSEC_PSK" ] && [ -z "$VPN_USER" ] && [ -z "$VPN_PASSWORD" ]; then
+#  bigecho "VPN credentials not set by user. Generating random PSK and password..."
+#  VPN_IPSEC_PSK=$(LC_CTYPE=C tr -dc 'A-HJ-NPR-Za-km-z2-9' < /dev/urandom | head -c 20)
+#  VPN_USER=vpnuser
+#  VPN_PASSWORD=$(LC_CTYPE=C tr -dc 'A-HJ-NPR-Za-km-z2-9' < /dev/urandom | head -c 16)
+#fi
 
-if [ -z "$VPN_IPSEC_PSK" ] || [ -z "$VPN_USER" ] || [ -z "$VPN_PASSWORD" ]; then
-  exiterr "All VPN credentials must be specified. Edit the script and re-enter them."
-fi
+#if [ -z "$VPN_IPSEC_PSK" ] || [ -z "$VPN_USER" ] || [ -z "$VPN_PASSWORD" ]; then
+#  exiterr "All VPN credentials must be specified. Edit the script and re-enter them."
+#fi
 
-if printf '%s' "$VPN_IPSEC_PSK $VPN_USER $VPN_PASSWORD" | LC_ALL=C grep -q '[^ -~]\+'; then
-  exiterr "VPN credentials must not contain non-ASCII characters."
-fi
+#if printf '%s' "$VPN_IPSEC_PSK $VPN_USER $VPN_PASSWORD" | LC_ALL=C grep -q '[^ -~]\+'; then
+#  exiterr "VPN credentials must not contain non-ASCII characters."
+#fi
 
-case "$VPN_IPSEC_PSK $VPN_USER $VPN_PASSWORD" in
-  *[\\\"\']*)
-    exiterr "VPN credentials must not contain these special characters: \\ \" '"
-    ;;
-esac
+#case "$VPN_IPSEC_PSK $VPN_USER $VPN_PASSWORD" in
+#  *[\\\"\']*)
+#    exiterr "VPN credentials must not contain these special characters: \\ \" '"
+#    ;;
+#esac
 
 bigecho "VPN setup in progress... Please be patient."
 
@@ -196,69 +196,69 @@ if ! /usr/local/sbin/ipsec --version 2>/dev/null | grep -qF "$SWAN_VER"; then
   exiterr "Libreswan $SWAN_VER failed to build."
 fi
 
-bigecho "Creating VPN configuration..."
+#bigecho "Creating VPN configuration..."
 
-L2TP_NET=${VPN_L2TP_NET:-'192.168.42.0/24'}
-L2TP_LOCAL=${VPN_L2TP_LOCAL:-'192.168.42.1'}
-L2TP_POOL=${VPN_L2TP_POOL:-'192.168.42.10-192.168.42.250'}
-XAUTH_NET=${VPN_XAUTH_NET:-'192.168.43.0/24'}
-XAUTH_POOL=${VPN_XAUTH_POOL:-'192.168.43.10-192.168.43.250'}
-DNS_SRV1=${VPN_DNS_SRV1:-'8.8.8.8'}
-DNS_SRV2=${VPN_DNS_SRV2:-'8.8.4.4'}
-DNS_SRVS="\"$DNS_SRV1 $DNS_SRV2\""
-[ -n "$VPN_DNS_SRV1" ] && [ -z "$VPN_DNS_SRV2" ] && DNS_SRVS="$DNS_SRV1"
+#L2TP_NET=${VPN_L2TP_NET:-'192.168.42.0/24'}
+#L2TP_LOCAL=${VPN_L2TP_LOCAL:-'192.168.42.1'}
+#L2TP_POOL=${VPN_L2TP_POOL:-'192.168.42.10-192.168.42.250'}
+#XAUTH_NET=${VPN_XAUTH_NET:-'192.168.43.0/24'}
+#XAUTH_POOL=${VPN_XAUTH_POOL:-'192.168.43.10-192.168.43.250'}
+#DNS_SRV1=${VPN_DNS_SRV1:-'8.8.8.8'}
+#DNS_SRV2=${VPN_DNS_SRV2:-'8.8.4.4'}
+#DNS_SRVS="\"$DNS_SRV1 $DNS_SRV2\""
+#[ -n "$VPN_DNS_SRV1" ] && [ -z "$VPN_DNS_SRV2" ] && DNS_SRVS="$DNS_SRV1"
 
 # Create IPsec config
-conf_bk "/etc/ipsec.conf"
-cat > /etc/ipsec.conf <<EOF
-version 2.0
+#conf_bk "/etc/ipsec.conf"
+#cat > /etc/ipsec.conf <<EOF
+#version 2.0
 
-config setup
-  virtual-private=%v4:10.0.0.0/8,%v4:192.168.0.0/16,%v4:172.16.0.0/12,%v4:!$L2TP_NET,%v4:!$XAUTH_NET
-  protostack=netkey
-  interfaces=%defaultroute
-  uniqueids=no
+#config setup
+#  virtual-private=%v4:10.0.0.0/8,%v4:192.168.0.0/16,%v4:172.16.0.0/12,%v4:!$L2TP_NET,%v4:!$XAUTH_NET
+#  protostack=netkey
+#  interfaces=%defaultroute
+#  uniqueids=no
 
-conn shared
-  left=%defaultroute
-  leftid=$PUBLIC_IP
-  right=%any
-  encapsulation=yes
-  authby=secret
-  pfs=no
-  rekey=no
-  keyingtries=5
-  dpddelay=30
-  dpdtimeout=120
-  dpdaction=clear
-  ikev2=never
-  ike=aes256-sha2,aes128-sha2,aes256-sha1,aes128-sha1,aes256-sha2;modp1024,aes128-sha1;modp1024
-  phase2alg=aes_gcm-null,aes128-sha1,aes256-sha1,aes256-sha2_512,aes128-sha2,aes256-sha2
-  sha2-truncbug=no
+#conn shared
+#  left=%defaultroute
+#  leftid=$PUBLIC_IP
+#  right=%any
+#  encapsulation=yes
+#  authby=secret
+#  pfs=no
+#  rekey=no
+#  keyingtries=5
+#  dpddelay=30
+#  dpdtimeout=120
+#  dpdaction=clear
+#  ikev2=never
+#  ike=aes256-sha2,aes128-sha2,aes256-sha1,aes128-sha1,aes256-sha2;modp1024,aes128-sha1;modp1024
+#  phase2alg=aes_gcm-null,aes128-sha1,aes256-sha1,aes256-sha2_512,aes128-sha2,aes256-sha2
+#  sha2-truncbug=no
 
-conn l2tp-psk
-  auto=add
-  leftprotoport=17/1701
-  rightprotoport=17/%any
-  type=transport
-  phase2=esp
-  also=shared
+#conn l2tp-psk
+#  auto=add
+#  leftprotoport=17/1701
+#  rightprotoport=17/%any
+#  type=transport
+#  phase2=esp
+#  also=shared
 
-conn xauth-psk
-  auto=add
-  leftsubnet=0.0.0.0/0
-  rightaddresspool=$XAUTH_POOL
-  modecfgdns=$DNS_SRVS
-  leftxauthserver=yes
-  rightxauthclient=yes
-  leftmodecfgserver=yes
-  rightmodecfgclient=yes
-  modecfgpull=yes
-  xauthby=file
-  ike-frag=yes
-  cisco-unity=yes
-  also=shared
-EOF
+#conn xauth-psk
+#  auto=add
+#  leftsubnet=0.0.0.0/0
+#  rightaddresspool=$XAUTH_POOL
+#  modecfgdns=$DNS_SRVS
+#  leftxauthserver=yes
+#  rightxauthclient=yes
+#  leftmodecfgserver=yes
+#  rightmodecfgclient=yes
+#  modecfgpull=yes
+#  xauthby=file
+#  ike-frag=yes
+#  cisco-unity=yes
+#  also=shared
+#EOF
 
 # Specify IPsec PSK
 conf_bk "/etc/ipsec.secrets"
@@ -272,13 +272,13 @@ cat > /etc/xl2tpd/xl2tpd.conf <<EOF
 [global]
 port = 1701
 
-[lns default]
-ip range = $L2TP_POOL
-local ip = $L2TP_LOCAL
-require chap = yes
-refuse pap = yes
-require authentication = yes
-name = l2tpd
+#[lns default]
+#ip range = $L2TP_POOL
+#local ip = $L2TP_LOCAL
+#require chap = yes
+#refuse pap = yes
+#require authentication = yes
+#name = l2tpd
 pppoptfile = /etc/ppp/options.xl2tpd
 length bit = yes
 EOF
@@ -468,16 +468,16 @@ cat <<EOF
 
 ================================================
 
-IPsec VPN server is now ready for use!
+IPsec Tunnel is now ready for use!
 
-Connect to your new VPN with these details:
+#Connect to your new VPN with these details:
 
-Server IP: $PUBLIC_IP
-IPsec PSK: $VPN_IPSEC_PSK
-Username: $VPN_USER
-Password: $VPN_PASSWORD
+#Server IP: $PUBLIC_IP
+#IPsec PSK: $VPN_IPSEC_PSK
+#Username: $VPN_USER
+#Password: $VPN_PASSWORD
 
-Write these down. You'll need them to connect!
+#Write these down. You'll need them to connect!
 
 Important notes:   https://git.io/vpnnotes
 Setup VPN clients: https://git.io/vpnclients
